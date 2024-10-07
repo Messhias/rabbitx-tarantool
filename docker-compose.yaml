@@ -1,0 +1,28 @@
+services:
+  tarantool:
+    image: tarantool/tarantool:2.10
+    container_name: tarantool
+    ports:
+      - "3301:3301"
+    environment:
+      TARANTOOL_USER_NAME: admin
+      TARANTOOL_USER_PASSWORD: password
+    volumes:
+      - ./tarantool_data:/var/lib/tarantool
+      - ./init.lua:/etc/tarantool/init.lua
+    command: tarantool /etc/tarantool/init.lua
+
+  backend:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: go_backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - tarantool
+    volumes:
+      - ./src:/app/src  # Mapeia o diretório src do host para o container
+      - ./tmp:/app/tmp  # Para armazenar os binários temporários
+    working_dir: /app/src
+    command: air -c ../.air.toml
